@@ -36,3 +36,15 @@ resource "aws_waf_rule" "ip_blacklist_rule" {
     type    = "IPMatch"
   }
 }
+resource "aws_waf_rule" "skip_upload_rule" {
+  count       = var.site_upload ? 1 : 0
+  depends_on  = ["aws_waf_regex_match_set.site_upload_set"]
+  name        = "Skip Form uploads Rule"
+  metric_name = "SkipUploadRule"
+
+  predicates {
+    data_id = aws_waf_regex_match_set.site_upload_set[count.index].id
+    negated = false
+    type    = "RegexMatch"
+  }
+}

@@ -1,12 +1,23 @@
 resource "aws_waf_web_acl" "waf_acl" {
-  depends_on  = ["aws_waf_rule.sql_injection_rule", "aws_waf_rule.xss_rule"]
+  depends_on  = ["aws_waf_rule.sql_injection_rule", "aws_waf_rule.xss_rule", "aws_waf_rule.skip_upload_rule"]
   name        = "CloudFrontGlobalWafWebAcl"
   metric_name = "cloudFrontGlobalWafWebAcl"
 
   default_action {
     type = "ALLOW"
   }
+  dynamic "rules" {
+    for_each = var.site_upload ? [var.site_upload] : []
+    content {
+      action {
+        type = "ALLOW"
+      }
 
+      priority = 2
+      rule_id  = aws_waf_rule.sql_injection_rule[0].id
+      type     = "REGULAR"
+    }
+  }
   dynamic "rules" {
     for_each = var.sql_injection ? [var.sql_injection] : []
     content {
@@ -14,8 +25,8 @@ resource "aws_waf_web_acl" "waf_acl" {
         type = "BLOCK"
       }
 
-      priority = 3
-      rule_id  = aws_waf_rule.sql_injection_rule[0].id
+      priority = 4
+      rule_id  = aws_waf_rule.skip_upload_rule[0].id
       type     = "REGULAR"
     }
   }
@@ -27,7 +38,7 @@ resource "aws_waf_web_acl" "waf_acl" {
         type = "BLOCK"
       }
 
-      priority = 2
+      priority = 3
       rule_id  = aws_waf_rule.xss_rule[0].id
       type     = "REGULAR"
     }

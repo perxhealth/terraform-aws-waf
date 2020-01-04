@@ -135,3 +135,25 @@ resource "aws_waf_ipset" "ip_set" {
     }
   }
 }
+###################################################################
+# Site Upload Condition
+# Using regex to filter any content-type with multipart/form-data
+###################################################################
+resource "aws_waf_regex_match_set" "site_upload_set" {
+  name = "siteUpload"
+
+  regex_match_tuple {
+    field_to_match {
+      data = "Content-type"
+      type = "HEADER"
+    }
+
+    regex_pattern_set_id = "${aws_waf_regex_pattern_set.example.id}"
+    text_transformation  = "NONE"
+  }
+}
+
+resource "aws_waf_regex_pattern_set" "site_upload_regex" {
+  name                  = "siteUpload"
+  regex_pattern_strings = ["multipart\/form\-data*"]
+}
