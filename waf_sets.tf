@@ -140,6 +140,7 @@ resource "aws_waf_ipset" "ip_set" {
 # Using regex to filter any content-type with multipart/form-data
 ###################################################################
 resource "aws_waf_regex_match_set" "site_upload_set" {
+  count       = var.site_upload ? 1 : 0
   name = "siteUpload"
 
   regex_match_tuple {
@@ -148,12 +149,13 @@ resource "aws_waf_regex_match_set" "site_upload_set" {
       type = "HEADER"
     }
 
-    regex_pattern_set_id = "${aws_waf_regex_pattern_set.example.id}"
+    regex_pattern_set_id = "${aws_waf_regex_pattern_set.site_upload_regex[count.index].id}"
     text_transformation  = "NONE"
   }
 }
 
 resource "aws_waf_regex_pattern_set" "site_upload_regex" {
+  count       = var.site_upload ? 1 : 0
   name                  = "siteUpload"
-  regex_pattern_strings = ["multipart\/form\-data*"]
+  regex_pattern_strings = ["multipart/form-data*"]
 }
