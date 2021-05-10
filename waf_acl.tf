@@ -91,9 +91,14 @@ resource "aws_wafv2_web_acl" "waf_acl" {
   rule {
     name = "CloudFrontGlobal-sql-xss"
     priority = 0
+
+    override_action {
+      none {}
+    }
+
     statement {
       rule_group_reference_statement {
-        arn = aws_wafv2_rule_group.rule_group.arn
+        arn = aws_wafv2_rule_group.rule_group[count.index].arn
       }
     }
     visibility_config {
