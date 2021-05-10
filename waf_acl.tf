@@ -1,48 +1,111 @@
-resource "aws_waf_web_acl" "waf_acl" {
-  depends_on  = ["aws_waf_rule.sql_injection_rule", "aws_waf_rule.xss_rule"]
-  name        = "CloudFrontGlobalWafWebAcl"
-  metric_name = "cloudFrontGlobalWafWebAcl"
+resource "aws_wafv2_rule_group" "rule_group" {
+  count       = var.enabled ? 1 : 0
+  provider    = aws.us-east-1
+  name        = "sql-xss-rule"
+  description = "An rule blocking sql injection and xss"
+  scope       = "CLOUDFRONT"
+  capacity    = 500
 
-  default_action {
-    type = "ALLOW"
-  }
-
-  dynamic "rules" {
+  dynamic "rule" {
     for_each = var.sql_injection ? [var.sql_injection] : []
     content {
+      name     = "SQL"
+      priority = 0
+
       action {
-        type = "BLOCK"
+        block {}
       }
 
-      priority = 3
-      rule_id  = aws_waf_rule.sql_injection_rule[0].id
-      type     = "REGULAR"
+      statement {
+        sqli_match_statement {
+          field_to_match {
+            all_query_arguments {}
+          }
+          text_transformation {
+            priority = 5
+            type     = "URL_DECODE"
+          }
+          text_transformation {
+            priority = 4
+            type     = "HTML_ENTITY_DECODE"
+          }
+          text_transformation {
+            priority = 3
+            type     = "COMPRESS_WHITE_SPACE"
+          }
+            }
+      }
+
+      visibility_config {
+        cloudwatch_metrics_enabled = true
+        metric_name                = "sqli-statement"
+        sampled_requests_enabled   = false
+      }
     }
   }
 
-  dynamic "rules" {
+  dynamic "rule" {
     for_each = var.cross_site_scripting ? [var.cross_site_scripting] : []
     content {
+      name      = "XSS"
+      priority  = 1
       action {
-        type = "BLOCK"
+        block {}
       }
-
-      priority = 2
-      rule_id  = aws_waf_rule.xss_rule[0].id
-      type     = "REGULAR"
+      statement {
+        xss_match_statement {
+          field_to_match {
+            all_query_arguments {}
+          }
+          text_transformation {
+            priority = 2
+            type     = "NONE"
+          }
+        }
+      }
+      visibility_config {
+        cloudwatch_metrics_enabled  = true
+        metric_name                 = "xss-statement"
+        sampled_requests_enabled    = false
+      }
     }
   }
 
-  dynamic "rules" {
-    for_each = var.ip_blacklist.enable ? [var.ip_blacklist] : []
-    content {
-      action {
-        type = "BLOCK"
-      }
+  visibility_config {
+    cloudwatch_metrics_enabled = true
+    metric_name                = "sql-xss-rule-group"
+    sampled_requests_enabled   = false
+  }
+}
 
-      priority = 1
-      rule_id  = aws_waf_ipset.ip_set[0].id
-      type     = "REGULAR"
+resource "aws_wafv2_web_acl" "waf_acl" {
+  count       = var.enabled ? 1 : 0
+  provider    = aws.us-east-1
+  scope       = "CLOUDFRONT"
+  name        = var.name
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name = "CloudFrontGlobal-sql-xss"
+    priority = 0
+    statement {
+      rule_group_reference_statement {
+        arn = aws_wafv2_rule_group.rule_group.arn
+      }
     }
+    visibility_config {
+      cloudwatch_metrics_enabled  = true
+      metric_name                 = "CloudFront-sql-xss-rule"
+      sampled_requests_enabled    = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled  = true
+    metric_name                 = "CloudFrontGlobalWafWebAcl"
+    sampled_requests_enabled    = true
   }
 }

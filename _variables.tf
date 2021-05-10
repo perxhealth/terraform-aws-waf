@@ -1,11 +1,20 @@
+variable "enabled" {
+  type    = bool
+  default = true
+}
+
 variable "sql_injection" {
   type    = bool
-  default = "false"
+  default = false
 }
 
 variable "cross_site_scripting" {
   type    = bool
-  default = "false"
+  default = false
+}
+
+variable "name" {
+  type    = string
 }
 
 variable "ip_blacklist" {
@@ -14,7 +23,7 @@ variable "ip_blacklist" {
     list   = list(string)
   })
   default = {
-    enable = "false"
+    enable = false
     list   = []
   }
 }

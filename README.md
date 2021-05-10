@@ -27,10 +27,10 @@ Dynamic rules:
 ```hcl
 module "waf_acl" {
   # source             = "git::https://github.com/DNXLabs/terraform-aws-waf.git?ref=0.1.0"
-  sql_injection        = "true"
-  cross_site_scripting = "true"
+  sql_injection        = true
+  cross_site_scripting = true
   ip_blacklist         = {
-    enable = "true"
+    enable = true
     list   = [
       "10.0.0.0/24",
       "192.168.0.0/16"
