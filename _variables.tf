@@ -27,3 +27,8 @@ variable "ip_blacklist" {
     list   = []
   }
 }
+
+variable "scope" {
+  type = string
+  default = "CLOUDFRONT"
+}

@@ -1,9 +1,9 @@
 resource "aws_wafv2_rule_group" "rule_group" {
   count       = var.enabled ? 1 : 0
-  provider    = aws.us-east-1
+  provider    = aws
   name        = "sql-xss-rule"
   description = "An rule blocking sql injection and xss"
-  scope       = "CLOUDFRONT"
+  scope       = var.scope
   capacity    = 500
 
   dynamic "rule" {
@@ -80,8 +80,8 @@ resource "aws_wafv2_rule_group" "rule_group" {
 
 resource "aws_wafv2_web_acl" "waf_acl" {
   count       = var.enabled ? 1 : 0
-  provider    = aws.us-east-1
-  scope       = "CLOUDFRONT"
+  provider    = aws
+  scope       = var.scope
   name        = var.name
 
   default_action {
