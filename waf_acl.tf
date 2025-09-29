@@ -113,4 +113,8 @@ resource "aws_wafv2_web_acl" "waf_acl" {
     metric_name                 = "CloudFrontGlobalWafWebAcl"
     sampled_requests_enabled    = true
   }
+
+  lifecycle {
+    ignore_changes = [rule]
+  }
 }
