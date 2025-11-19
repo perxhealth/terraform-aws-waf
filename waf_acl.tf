@@ -88,6 +88,19 @@ resource "aws_wafv2_web_acl" "waf_acl" {
     allow {}
   }
 
+  data_protection_config {
+    data_protection {
+      action                     = "SUBSTITUTION"
+      exclude_rate_based_details = false
+      exclude_rule_match_details = false
+
+      field {
+        field_keys = ["authorization"]
+        field_type = "SINGLE_HEADER"
+      }
+    }
+  }
+
   rule {
     name = "CloudFrontGlobal-sql-xss"
     priority = 0
